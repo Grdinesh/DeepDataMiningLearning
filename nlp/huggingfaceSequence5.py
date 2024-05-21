@@ -277,24 +277,26 @@ def get_myoptimizer(model, learning_rate=2e-5, weight_decay=0.0):
     return optimizer
 
 def compute_metrics(eval_preds):
-    preds, labels = eval_preds
-    # In case the model returns more than the prediction logits
-    if isinstance(preds, tuple):
-        preds = preds[0]
-
-    decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-
-    # Replace -100s in the labels as we can't decode them
-    labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
-    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-
-    # Some simple post-processing
-    decoded_preds = [pred.strip() for pred in decoded_preds]
-    #decoded_labels = [[label.strip()] for label in decoded_labels]
-    decoded_labels = [label.strip() for label in decoded_labels]
-
-    result = metric.compute(predictions=decoded_preds, references=decoded_labels)
-    return {"bleu": result["score"]}
+    if task == "QA":
+        return metric.compute(predictions=eval_preds.predictions, references=eval_preds.label_ids)
+    else:
+        preds, labels = eval_preds
+        if isinstance(preds, tuple):
+            preds = preds[0]
+        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+        labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+        if task == "translation":
+            decoded_preds = [pred.strip() for pred in decoded_preds]
+            decoded_labels = [[label.strip()] for label in decoded_labels]
+        elif task == "summarization":
+            import nltk  
+            decoded_preds = [pred.strip() for pred in decoded_preds]
+            decoded_labels = [label.strip() for label in decoded_labels]
+            decoded_preds = ["\n".join(nltk.sent_tokenize(pred)) for pred in decoded_preds]
+            decoded_labels = ["\n".join(nltk.sent_tokenize(label)) for label in decoded_labels]
+        result = metric.compute(predictions=decoded_preds, references=decoded_labels)
+        return {"bleu": result["score"]} if task == "translation" else result 
 
 def postprocess(predictions, labels, task="translation", ignore_pad_token_for_loss=True):
     predictions = predictions.cpu().numpy()

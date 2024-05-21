@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hugging Face NLP Tasks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Hugging Face NLP Tasks</h1>
+
+    <label for="task">Select Task:</label>
+    <select id="task">
+        <option value="Translation">Translation</option>
+        <option value="Summarization">Summarization</option>
+        <option value="Question Answering">Question Answering</option>
+    </select>
+
+    <textarea id="text-input" placeholder="Enter Text"></textarea>
+    <button id="process-button">Process</button>
+
+    <div id="result-container">
+        <h2>Result: </h2>
+        <p id="result-text"></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
